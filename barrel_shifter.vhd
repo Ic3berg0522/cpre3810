@@ -1,0 +1,41 @@
+--Dylan Kramer
+--Barrel shifter
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity barrel_shifter is
+  port (
+    data_in  : in  std_logic_vector(31 downto 0);
+    shift_amt : in  std_logic_vector(4 downto 0);  --
+    mode  : in  std_logic_vector(1 downto 0);  -- 00 SLL, 01 SRL, 10 SRA
+    data_out  : out std_logic_vector(31 downto 0)
+  );
+end entity;
+
+architecture dataflow of barrel_shifter is
+  signal data_unsigned : unsigned(31 downto 0) := (others=>'0');
+  signal data_signed : signed  (31 downto 0) := (others=>'0');
+  signal shift  : natural range 0 to 31;
+
+  signal sll_res, srl_res, sra_res : std_logic_vector(31 downto 0);
+
+begin
+--Type cast before shifting
+  data_unsigned <= unsigned(data_in);
+  data_signed <= signed(data_in);
+--shift_left and right NEED this to be a to_integer to work, so making the shift_amt an unsigned integer pre-shift
+  shift  <= to_integer(unsigned(shift_amt));
+--Do the shifts; this implements SLL, SRL and SRA
+  sll_res <= std_logic_vector( shift_left (data_unsigned, shift) );
+  srl_res <= std_logic_vector( shift_right(data_unsigned, shift) );
+  sra_res <= std_logic_vector( shift_right(data_signed, shift) );
+
+--Select the shift result
+  with mode select
+    data_out <= sll_res when "00", --When input from ALU (mode) is 00, select SLL
+              srl_res when "01", --When input from ALU (mode) is 01, select SRL
+              sra_res when "10", --When input from ALU (mode) is 10, select SRA
+              (others => '0') when others;
+end architecture;
+

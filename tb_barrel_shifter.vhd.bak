@@ -1,0 +1,131 @@
+--Dylan Kramer
+--TB For barrel shifter
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity tb_barrel_shifter is end entity;
+
+architecture sim of tb_barrel_shifter is
+  -- DUT signals (RV32I)
+  signal data   : std_logic_vector(31 downto 0) := (others => '0');
+  signal shamt  : std_logic_vector(4 downto 0)  := (others => '0');  -- 0..31
+  signal mode   : std_logic_vector(1 downto 0)  := "00";             -- 00=SLL,01=SRL,10=SRA
+  signal result : std_logic_vector(31 downto 0);
+
+  -- helper
+  procedure wait_ns(constant t: time := 20 ns) is
+  begin
+    wait for t;
+  end procedure;
+begin
+  -- DUT
+  UUT: entity work.barrel_shifter
+    generic map ( G_WIDTH => 32 )
+    port map (
+      i_data  => data,
+      i_shamt => shamt,
+      i_mode  => mode,
+      o_data  => result
+    );
+
+  -- Stimulus: watch 'result' in the waveform
+  stim: process
+  begin
+    ------------------------------------------------------------
+    -- SLL (logical left)  mode = "00"
+    ------------------------------------------------------------
+    -- Case 1: shift 0 ? expect unchanged
+    data  <= x"0000_0001";  shamt <= "00000";  mode <= "00";
+    -- EXPECT result = 00000001
+    wait_ns;
+
+    -- Case 2: shift 1 ? expect 00000002
+    data  <= x"0000_0001";  shamt <= "00001";  mode <= "00";
+    -- EXPECT result = 00000002
+    wait_ns;
+
+    -- Case 3: shift 4 ? expect 00000010 << 4 = 00000100?
+    data  <= x"0000_0010";  shamt <= "00100";  mode <= "00";
+    -- EXPECT result = 00000020 (0x10 << 4 = 0x100)
+    wait_ns;
+
+    -- Case 4: MSB in ? expect overflowed bits drop
+    data  <= x"8000_0001";  shamt <= "00001";  mode <= "00";
+    -- EXPECT result = 0000_0002
+    wait_ns;
+
+    -- Case 5: shift 31 ? LSB goes to MSB
+    data  <= x"0000_0001";  shamt <= "11111";  mode <= "00";
+    -- EXPECT result = 80000000
+    wait_ns;
+
+    ------------------------------------------------------------
+    -- SRL (logical right, zero-fill)  mode = "01"
+    ------------------------------------------------------------
+    -- Case 6: shift 0 ? unchanged
+    data  <= x"8000_0001";  shamt <= "00000";  mode <= "01";
+    -- EXPECT result = 80000001
+    wait_ns;
+
+    -- Case 7: shift 1 ? msb drops, zero fills in at left
+    data  <= x"8000_0001";  shamt <= "00001";  mode <= "01";
+    -- EXPECT result = 40000000
+    wait_ns;
+
+    -- Case 8: shift 4 ? right by 4, zero-fill
+    data  <= x"F000_0000";  shamt <= "00100";  mode <= "01";
+    -- EXPECT result = 0F000000
+    wait_ns;
+
+    -- Case 9: shift 31 ? only msb survives to bit0
+    data  <= x"8000_0000";  shamt <= "11111";  mode <= "01";
+    -- EXPECT result = 00000001
+    wait_ns;
+
+    ------------------------------------------------------------
+    -- SRA (arithmetic right, sign-fill)  mode = "10"
+    ------------------------------------------------------------
+    -- Case 10: positive value ? behaves like SRL (left fills with 0)
+    data  <= x"1000_0000";  shamt <= "00001";  mode <= "10";
+    -- EXPECT result = 08000000
+    wait_ns;
+
+    -- Case 11: negative value (msb=1) ? sign bit replicated
+    data  <= x"8000_0000";  shamt <= "00001";  mode <= "10";
+    -- EXPECT result = C0000000  (1s shift in on left)
+    wait_ns;
+
+    -- Case 12: negative value, big shift
+    data  <= x"F000_0001";  shamt <= "01100";  mode <= "10";  -- >>12
+    -- EXPECT result = 0xFFF00000 >> 12 with sign-fill ? 0xFFF000?  (observe sign extend)
+    wait_ns;
+
+    -- Case 13: shift 31 ? all bits become sign bit
+    data  <= x"8000_1234";  shamt <= "11111";  mode <= "10";
+    -- EXPECT result = FFFFFFFF  (since sign bit=1)
+    wait_ns;
+
+    -- Case 14: shift 31 with positive value
+    data  <= x"7FFF_FFFF";  shamt <= "11111";  mode <= "10";
+    -- EXPECT result = 00000000  (since sign bit=0)
+    wait_ns;
+
+    ------------------------------------------------------------
+    -- Mix modes quickly on same data to see differences
+    ------------------------------------------------------------
+    data  <= x"FFFF_0000";  shamt <= "00100";  mode <= "01";  -- SRL by 4
+    -- EXPECT result = 0x0FFF_F000
+    wait_ns;
+
+    mode  <= "10";  -- SRA by 4
+    -- EXPECT result = 0xFFFF_F000  (sign-fill)
+    wait_ns;
+
+    mode  <= "00";  -- SLL by 4
+    -- EXPECT result = 0xFFF0_0000
+    wait_ns;
+
+    wait;
+  end process;
+end architecture;
