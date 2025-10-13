@@ -9,20 +9,21 @@ use work.isa_pkg.all;
 entity fetch_unit is
   generic ( G_RESET_VECTOR : unsigned(31 downto 0) := x"00000000" );
   port (
-    i_clk, i_rst : in  std_logic;
-    i_halt       : in  std_logic;
+    i_clk: in  std_logic;
+    i_rst : in  std_logic;
+    i_halt : in  std_logic;
     --control
-    i_pc_src     : in  pc_src_t;-- SEQ, BR_TGT, JAL_TGT, JALR_TGT
-    i_br_taken   : in  std_logic;-- from branch_predict file
+    i_pc_src: in  pc_src_t;-- SEQ, BR_TGT, JAL_TGT, JALR_TGT
+    i_br_taken : in  std_logic;-- from branch_predict file
     --targets
-    i_rs1_val    : in  std_logic_vector(31 downto 0); -- for JALR
-    i_immI       : in  std_logic_vector(31 downto 0);
-    i_immB       : in  std_logic_vector(31 downto 0);
-    i_immJ       : in  std_logic_vector(31 downto 0);
+    i_rs1_val : in  std_logic_vector(31 downto 0); -- for JALR
+    i_immI: in  std_logic_vector(31 downto 0);
+    i_immB: in  std_logic_vector(31 downto 0);
+    i_immJ : in  std_logic_vector(31 downto 0);
     --outputs
-    o_pc         : out std_logic_vector(31 downto 0);
-    o_pc_plus4   : out std_logic_vector(31 downto 0);
-    o_imem_addr  : out std_logic_vector(31 downto 0)
+    o_pc : out std_logic_vector(31 downto 0);
+    o_pc_plus4: out std_logic_vector(31 downto 0);
+    o_imem_addr: out std_logic_vector(31 downto 0)
   );
 end entity;
 
