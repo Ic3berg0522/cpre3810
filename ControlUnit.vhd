@@ -95,7 +95,7 @@ begin
                 ResultSrc  <= '0';
                 MemWrite   <= '0';
                 RegWrite   <= '1';
-		ALU_op <= "0100";
+		ALU_op <= "1010";
 		if funct7 = "0100000" then -- srai
 			ALU_op <= "1001";
 		end if;
@@ -109,7 +109,7 @@ begin
                 ResultSrc  <= '0';
                 MemWrite   <= '0';
                 RegWrite   <= '1';
-		ALU_op <= "0010";
+		ALU_op <= "0000";
 		if funct7 = "0100000" then -- sub
 			ALU_op <= "0001";
 		end if;
@@ -147,7 +147,7 @@ begin
                 ResultSrc  <= '0';
                 MemWrite   <= '0';
                 RegWrite   <= '1';
-		ALU_op <= "0010";
+		ALU_op <= "0101";
 
             elsif funct3 = "001" then --sll
                 ALUSrc     <= '0';
