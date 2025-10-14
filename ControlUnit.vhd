@@ -24,7 +24,7 @@ begin
 
     process(opcode, funct3, funct7)
     begin
-        -- Default NOP
+        -- Default  P
         ALUSrc     <= '0';
         ALUControl <= "00";
         ImmType    <= "000";
@@ -77,7 +77,7 @@ begin
                 ImmType    <= "000";
                 MemWrite   <= '0';
                 RegWrite   <= '1';
-		ALU_op <= "1010";
+		ALU_op <= "0110";
 
             elsif funct3 = "011" then --sltiu
                 ResultSrc  <= '0';
@@ -86,7 +86,7 @@ begin
                 ImmType    <= "000";
                 MemWrite   <= '0';
                 RegWrite   <= '1';
-		ALU_op <= "1011";
+		        ALU_op <= "1011";
 
             elsif funct3 = "101" then --srli
                 ALUSrc     <= '1';
@@ -95,7 +95,7 @@ begin
                 ResultSrc  <= '0';
                 MemWrite   <= '0';
                 RegWrite   <= '1';
-		ALU_op <= "1010";
+		        ALU_op <= "1000";
 		if funct7 = "0100000" then -- srai
 			ALU_op <= "1001";
 		end if;
@@ -147,7 +147,7 @@ begin
                 ResultSrc  <= '0';
                 MemWrite   <= '0';
                 RegWrite   <= '1';
-		ALU_op <= "0101";
+		ALU_op <= "0110";
 
             elsif funct3 = "001" then --sll
                 ALUSrc     <= '0';
