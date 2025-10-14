@@ -20,7 +20,7 @@ architecture structural of ALUUnit is
 
   -- signals
   signal sum, diff : std_logic_vector(31 downto 0);
-  signal and_out, or_out, xor_out, nor_out : std_logic_vector(31 downto 0);
+  signal and_out, or_out, xor_out : std_logic_vector(31 downto 0);
   signal shifter_out : std_logic_vector(31 downto 0);
   signal slt_bit, slti_bit, sltiu_bit : std_logic;
 
