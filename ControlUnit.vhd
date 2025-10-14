@@ -77,7 +77,7 @@ begin
                 ImmType    <= "000";
                 MemWrite   <= '0';
                 RegWrite   <= '1';
-		ALU_op <= "0110";
+		ALU_op <= "1010";
 
             elsif funct3 = "011" then --sltiu
                 ResultSrc  <= '0';
@@ -86,7 +86,7 @@ begin
                 ImmType    <= "000";
                 MemWrite   <= '0';
                 RegWrite   <= '1';
-		ALU_op <= "0110";
+		ALU_op <= "1011";
 
             elsif funct3 = "101" then --srli
                 ALUSrc     <= '1';
