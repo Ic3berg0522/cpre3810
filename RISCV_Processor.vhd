@@ -234,9 +234,10 @@ s_funct7 <= s_Inst(31 downto 25);
 -- Destination register (rd) for regfile writeback
 s_RegWrAddr <= s_rd;
 
--- ========= 2) Safe default for shifts (prevents 'U's) =========
-s_ALUShiftAmt <= (others => '0');
-
+-- Shift amount: R-type uses rs2 *value*; I-type uses shamt field
+s_ALUShiftAmt <= s_rs2_val(4 downto 0) when (s_opcode = "0110011" and (s_funct3 = "001" or s_funct3 = "101")) else
+                 s_Inst(24 downto 20)  when (s_opcode = "0010011" and (s_funct3 = "001" or s_funct3 = "101")) else
+                 (others => '0');
 
 
   PCU: PCFetch
