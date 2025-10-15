@@ -15,8 +15,9 @@ entity ControlUnit is
         ResultSrc  : out std_logic;                    
         MemWrite   : out std_logic;
         RegWrite   : out std_logic;
-        ALU_op     : out std_logic_vector(3 downto 0)    -- 0000=ADD,0001=SUB,0010=AND,0011=OR,0100=XOR,0110=SLT,0111=SLL,1000=SRL,1001=SRA,1011=SLTU
-    );
+        ALU_op     : out std_logic_vector(3 downto 0);    -- 0000=ADD,0001=SUB,0010=AND,0011=OR,0100=XOR,0110=SLT,0111=SLL,1000=SRL,1001=SRA,1011=SLTU
+        Halt       : out std_logic   
+        );
 end ControlUnit;
 
 architecture Behavioral of ControlUnit is
@@ -31,6 +32,7 @@ begin
         MemWrite   <= '0';
         RegWrite   <= '0';
         ALU_op     <= "0000"; -- ADD
+        Halt       <= '0';
 
         -- I type functions
         if opcode = "0010011" then
@@ -155,8 +157,10 @@ begin
             ALUControl <= "00";
 
         -- wfi
-        elsif opcode = "1110011" then
+        elsif opcode = "0100100" then
             RegWrite   <= '0';
+            ALU_op     <= "1111";
+            Halt       <= '1';
         end if;
     end process;
 end Behavioral;

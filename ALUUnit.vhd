@@ -96,6 +96,7 @@ begin
          shifter_out                      when "1001",  -- SRAI
          (31 downto 1 => '0') & slti_bit  when "1010",  -- SLTI
          (31 downto 1 => '0') & sltiu_bit when "1011",  -- SLTIU
+         (others => '0')                  when "1111",  -- WFI
          (others => '0')                  when others;  -- Default
 
   
