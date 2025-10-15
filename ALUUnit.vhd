@@ -57,11 +57,12 @@ begin
 
 
   
-  -- Shift mode select (00=SLL, 01=SRL, 10=SRA)
+ -- Shift mode select (00=SLL, 01=SRL, 10=SRA/SRAI)
   with ALU_op select
     sh_mode <= "00" when "0111",  -- SLL
                 "01" when "1000",  -- SRL
                 "10" when "1001",  -- SRAI
+                "10" when "0101",  -- SRA
                 "00" when others;  -- default
 
   
@@ -88,6 +89,7 @@ begin
          and_out                          when "0010",  -- AND
          or_out                           when "0011",  -- OR
          xor_out                          when "0100",  -- XOR
+         shifter_out                      when "0101",  -- SRA
          (31 downto 1 => '0') & slt_bit   when "0110",  -- SLT
          shifter_out                      when "0111",  -- SLL
          shifter_out                      when "1000",  -- SRL

@@ -1,3 +1,4 @@
+--GitHubControlUnit
 --Michael Berg
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -11,7 +12,7 @@ entity ControlUnit is
         ALUSrc     : out std_logic;
         ALUControl : out std_logic_vector(1 downto 0);
         ImmType    : out std_logic_vector(2 downto 0);  -- 000=R,001=I,010=S,011=SB,100=U,101=UJ
-        ResultSrc  : out std_logic;                      -- 0=ALU, 1=DMem
+        ResultSrc  : out std_logic;                    
         MemWrite   : out std_logic;
         RegWrite   : out std_logic;
         ALU_op     : out std_logic_vector(3 downto 0)    -- 0000=ADD,0001=SUB,0010=AND,0011=OR,0100=XOR,0110=SLT,0111=SLL,1000=SRL,1001=SRA,1011=SLTU
@@ -31,11 +32,11 @@ begin
         RegWrite   <= '0';
         ALU_op     <= "0000"; -- ADD
 
-        -- I-type ALU immediates (0010011)
+        -- I type functions
         if opcode = "0010011" then
             ALUSrc     <= '1';
             RegWrite   <= '1';
-            ImmType    <= "001";          -- I
+            ImmType    <= "001";          
 
             if funct3 = "000" then        -- addi
                 ALUControl <= "00";
@@ -64,7 +65,7 @@ begin
                 end if;
             end if;
 
-        -- R-type ALU (0110011)
+        -- R type instructions
         elsif opcode = "0110011" then
             ALUSrc     <= '0';
             RegWrite   <= '1';
@@ -95,65 +96,64 @@ begin
             elsif funct3 = "101" then     -- srl/sra
                 ALUControl <= "11";
                 if funct7 = "0100000" then
-                    ALU_op <= "1001";     -- sra
+                    ALU_op <= "0101";     -- sra
                 else
                     ALU_op <= "1000";     -- srl
                 end if;
             end if;
 
-        -- Loads (0000011)
+        -- lb, lh, lbu, lhu, lw 
         elsif opcode = "0000011" then
             ALUSrc     <= '1';
             RegWrite   <= '1';
-            ResultSrc  <= '1';            -- WB from DMem
-            ImmType    <= "001";          -- I
+            ResultSrc  <= '1';           
+            ImmType    <= "001";          
             ALUControl <= "00";
-            ALU_op     <= "0000";         -- base + imm
+            ALU_op     <= "0000";         
 
-        -- Stores (0100011)
+        -- sw 
         elsif opcode = "0100011" then
             ALUSrc     <= '1';
             MemWrite   <= '1';
             RegWrite   <= '0';
-            ImmType    <= "010";          -- S
+            ImmType    <= "010";         
             ALUControl <= "00";
             ALU_op     <= "0000";
 
-        -- Branches (1100011)
+        -- bew, bne, blt, bge, bltu, bgeu
         elsif opcode = "1100011" then
             ALUSrc     <= '0';
             RegWrite   <= '0';
-            ImmType    <= "011";          -- SB
+            ImmType    <= "011";          
             ALUControl <= "00";
-            ALU_op     <= "0001";         -- SUB compare (shared)
+            ALU_op     <= "0001";         
 
-        -- AUIPC (0010111)
+        -- auipc
         elsif opcode = "0010111" then
             ALUSrc     <= '1';
             RegWrite   <= '1';
-            ImmType    <= "100";          -- U
+            ImmType    <= "100";         
             ALUControl <= "00";
             ALU_op     <= "0000";
 
-        -- JAL (1101111)
+        -- jal
         elsif opcode = "1101111" then
             ALUSrc     <= '1';
             RegWrite   <= '1';
-            ImmType    <= "101";          -- UJ
+            ImmType    <= "101";          
             ALUControl <= "00";
-            -- WB should later select PC+4
+           
 
-        -- JALR (1100111)
+        -- jalr
         elsif opcode = "1100111" then
             ALUSrc     <= '1';
             RegWrite   <= '1';
-            ImmType    <= "001";          -- I
+            ImmType    <= "001";          
             ALUControl <= "00";
 
-        -- WFI / system (1110011)
+        -- wfi
         elsif opcode = "1110011" then
             RegWrite   <= '0';
         end if;
     end process;
 end Behavioral;
-
