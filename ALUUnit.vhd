@@ -61,7 +61,7 @@ begin
   with ALU_op select
     sh_mode <= "00" when "0111",  -- SLL
                 "01" when "1000",  -- SRL
-                "10" when "1001",  -- SRAI
+                "11" when "1001",  -- SRAI
                 "10" when "0101",  -- SRA
                 "00" when others;  -- default
 
