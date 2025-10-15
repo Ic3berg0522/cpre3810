@@ -157,7 +157,7 @@ begin
             ALUControl <= "00";
 
         -- wfi
-        elsif opcode = "0100100" then
+        elsif opcode = "1110011" then
             RegWrite   <= '0';
             ALU_op     <= "1111";
             Halt       <= '1';
