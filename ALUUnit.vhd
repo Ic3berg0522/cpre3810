@@ -57,7 +57,7 @@ begin
 
 
   
- -- Shift mode select (00=SLL, 01=SRL, 10=SRA/SRAI)
+ -- Shift mode select (00=SLL, 01=SRL, 10=SRA 11=SRAI)
   with ALU_op select
     sh_mode <= "00" when "0111",  -- SLL
                 "01" when "1000",  -- SRL
