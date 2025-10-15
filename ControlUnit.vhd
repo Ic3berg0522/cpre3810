@@ -56,6 +56,9 @@ begin
             elsif funct3 = "011" then     -- sltiu
                 ALUControl <= "01";
                 ALU_op     <= "1011";
+            elsif funct3 = "001" then  -- slli
+                ALUControl <= "11";
+                ALU_op     <= "0111";  -- SLLI
             elsif funct3 = "101" then     -- srli/srai
                 ALUControl <= "11";
                 if funct7 = "0100000" then
