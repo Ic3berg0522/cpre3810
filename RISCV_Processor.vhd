@@ -94,6 +94,22 @@ signal s_ALUZero : std_logic := '0'; --Zero flag signal
 --Writeback signals
 signal s_WBSel : std_logic := '0';
 signal s_WBData : std_logic_vector(31 downto 0);
+
+--Load/Store control signals
+signal s_MemRead : std_logic;
+signal s_MemWrite : std_logic;
+signal s_LdByte : std_logic;
+signal s_LdHalf : std_logic;
+signal s_LdUnsigned : std_logic;
+signal s_StByte : std_logic;
+signal s_StHalf : std_logic;
+
+--Load/Store unit signals
+signal s_LSUBEn : std_logic_vector(3 downto 0);
+signal s_LoadedData : std_logic_vector(31 downto 0);
+signal s_RegWrLoad : std_logic;
+signal s_RegWr_Final : std_logic;
+
 --Control unit instantiation
   component ControlUnit is
     port(
@@ -107,7 +123,13 @@ signal s_WBData : std_logic_vector(31 downto 0);
       MemWrite   : out std_logic;
       RegWrite   : out std_logic;
       ALU_op     : out std_logic_vector(3 downto 0);
-      Halt       : out std_logic
+      Halt       : out std_logic;
+      MemRead    : out std_logic;
+      LdByte     : out std_logic;
+      LdHalf     : out std_logic;
+      LdUnsigned : out std_logic;
+      StByte     : out std_logic;
+      StHalf     : out std_logic
     );
 end component;
 --N carry ripple full adder instantiation
@@ -186,6 +208,28 @@ end component;
       o_pc        : out std_logic_vector(31 downto 0);
       o_pc_plus4  : out std_logic_vector(31 downto 0);
       o_imem_addr : out std_logic_vector(31 downto 0)
+    );
+  end component;
+
+  --Load and store unit instantiation
+component load_store_unit is
+    port (
+      i_addr        : in  std_logic_vector(31 downto 0);
+      i_rs2_wdata   : in  std_logic_vector(31 downto 0);
+      i_mem_read    : in  std_logic;
+      i_mem_write   : in  std_logic;
+      i_ld_byte     : in  std_logic;
+      i_ld_half     : in  std_logic;
+      i_ld_unsigned : in  std_logic;
+      i_st_byte     : in  std_logic;
+      i_st_half     : in  std_logic;
+      o_mem_addr    : out std_logic_vector(31 downto 0);
+      o_mem_wdata   : out std_logic_vector(31 downto 0);
+      o_mem_be      : out std_logic_vector(3 downto 0);
+      o_mem_re      : out std_logic;
+      o_mem_we      : out std_logic;
+      i_mem_rdata   : in  std_logic_vector(31 downto 0);
+      o_load_data   : out std_logic_vector(31 downto 0)
     );
   end component;
 
@@ -272,13 +316,19 @@ U_IMM: imm_generator
       funct3     => s_funct3,
       funct7     => s_funct7,
       ALUSrc     => s_ALUSrcSel,
-      ALUControl => open, --MIGHT NOT BE RIGHT
+      ALUControl => open,
       ImmType    => s_ImmKind, 
-      ResultSrc  => s_WBSel,   --Reading from mem
+      ResultSrc  => s_WBSel,
       MemWrite   => s_DMemWr,    
       RegWrite   => s_RegWr,
-      ALU_op     => s_ALUCtrl, --OUTPUT of ctrl unit which is 4-bit control for ALU
-      Halt       => s_Halt
+      ALU_op     => s_ALUCtrl,
+      Halt       => s_Halt,
+      MemRead    => s_MemRead,
+      LdByte     => s_LdByte,
+      LdHalf     => s_LdHalf,
+      LdUnsigned => s_LdUnsigned,
+      StByte     => s_StByte,
+      StHalf     => s_StHalf
     );
 --Reg file logic
 REGFILE: reg
@@ -325,12 +375,33 @@ MUX_WB: mux2t1_N
     port map(
 	i_S => s_WBSel,
 	i_D0 => s_ALURes,
-	i_D1 => s_DMemOut, --In the future will need to support loads
+	i_D1 => s_LoadedData, --In the future will need to support loads
 	o_O => s_WBData
 	);
 
- s_RegWrData <= s_WBData;
 
+LSU: load_store_unit
+  port map(
+    i_addr        => s_ALURes,           -- Address from ALU (computed address = rs1 + imm)
+    i_rs2_wdata   => s_rs2_val,          -- Data to store (rs2 value)
+    i_mem_read    => s_MemRead,          -- Load enable (from opcode decode)
+    i_mem_write   => s_MemWrite,         -- Store enable (from opcode decode)
+    i_ld_byte     => s_LdByte,           -- Load byte flag
+    i_ld_half     => s_LdHalf,           -- Load half flag
+    i_ld_unsigned => s_LdUnsigned,       -- Zero/sign extend flag
+    i_st_byte     => s_StByte,           -- Store byte flag
+    i_st_half     => s_StHalf,           -- Store half flag
+    o_mem_addr    => s_DMemAddr,         -- Address to memory
+    o_mem_wdata   => s_DMemData,         -- Write data to memory
+    o_mem_be      => s_LSUBEn,           -- Byte enables (unused in basic mem interface)
+    o_mem_re      => open,               -- Read enable (unused)
+    o_mem_we      => s_DMemWr,           -- Write enable to memory
+    i_mem_rdata   => s_DMemOut,          -- Read data from memory
+    o_load_data   => s_LoadedData        -- Load data for writeback
+  );
+
+
+ s_RegWrData <= s_WBData;
 
 -- Synthesis keep-alive and flags
 oALUOut <= s_ALURes;
