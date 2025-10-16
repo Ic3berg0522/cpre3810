@@ -83,19 +83,17 @@ signal s_immJ : std_logic_vector(31 downto 0) := (others => '0');
 
 --ALU signals
 signal s_ALUSrcSel : std_logic := '0'; --0: rs2, 1: immI
-signal s_ALUInB : std_logic_vector(N-1 downto 0) := (others => '0'); --second ALU input
+signal s_ALUInB : std_logic_vector(N-1 downto 0); --second ALU input
 signal s_ALURes : std_logic_vector(N-1 downto 0); --ALU Result signal
 signal s_ALUCtrl : std_logic_vector(3 downto 0) := (others=>'0');
 signal s_ALUOvfl : std_logic;
 signal s_ALU2BitControl : std_logic_vector(1 downto 0);
-signal s_ALUShiftAmt : std_logic_vector(4 downto 0) := (others=>'0');
+signal s_ALUShiftAmt : std_logic_vector(4 downto 0);
 signal s_ALUZero : std_logic := '0'; --Zero flag signal
 
 --Writeback signals
 signal s_WBSel : std_logic := '0';
-signal s_WBData : std_logic_vector(31 downto 0) := (others=> '0');
-
-
+signal s_WBData : std_logic_vector(31 downto 0);
 --Control unit instantiation
   component ControlUnit is
     port(
@@ -108,7 +106,8 @@ signal s_WBData : std_logic_vector(31 downto 0) := (others=> '0');
       ResultSrc  : out std_logic;
       MemWrite   : out std_logic;
       RegWrite   : out std_logic;
-      ALU_op     : out std_logic_vector(3 downto 0)
+      ALU_op     : out std_logic_vector(3 downto 0);
+      Halt       : out std_logic
     );
 end component;
 --N carry ripple full adder instantiation
@@ -240,7 +239,7 @@ s_ALUShiftAmt <= s_rs2_val(4 downto 0) when (s_opcode = "0110011" and (s_funct3 
 
 
   PCU: PCFetch
-    generic map(G_RESET_VECTOR => to_unsigned(16#00100100#, 32))
+    generic map(G_RESET_VECTOR => x"00000000")
     port map(
       i_clk=> iCLK,
       i_rst=> iRST,
@@ -278,7 +277,8 @@ U_IMM: imm_generator
       ResultSrc  => s_WBSel,   --Reading from mem
       MemWrite   => s_DMemWr,    
       RegWrite   => s_RegWr,
-      ALU_op     => s_ALUCtrl --OUTPUT of ctrl unit which is 4-bit control for ALU
+      ALU_op     => s_ALUCtrl, --OUTPUT of ctrl unit which is 4-bit control for ALU
+      Halt       => s_Halt
     );
 --Reg file logic
 REGFILE: reg
@@ -316,7 +316,7 @@ ALU0: ALUUnit
     ALU_op    => s_ALUCtrl,    
     F         => s_ALURes, --ALU Result
     Zero      => s_ALUZero,
-    Overflow  => s_ALUOvfl);
+    Overflow  => s_Ovfl);
 
 
 --Writeback MUX
@@ -335,10 +335,5 @@ MUX_WB: mux2t1_N
 -- Synthesis keep-alive and flags
 oALUOut <= s_ALURes;
 s_Ovfl  <= s_ALUOvfl;
-
--- Sequential PC defaults (already good)
-s_Halt    <= '0';
-PCSrc     <= PC_SEQ;
-s_BrTaken <= '0';
 
 end structure;
