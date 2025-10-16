@@ -41,8 +41,8 @@ AND0 : andg2 port map(i_A => i_D0,
        		        i_B => s_not,        
        		        o_F => w0);          
 --Second and gate port mapping
-AND1 : andg2 port map (i_A => i_D0,
-			 i_B => i_S,
+AND1 : andg2 port map (i_A => i_D1,
+			    i_B => i_S,
 		         o_F => w1);
 --First and only or gate port mapping
 OR1  : org2 port map ( i_A => w0, 

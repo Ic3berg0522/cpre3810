@@ -11,12 +11,19 @@ entity ControlUnit is
         funct7     : in  std_logic_vector(6 downto 0);
         ALUSrc     : out std_logic;
         ALUControl : out std_logic_vector(1 downto 0);
-        ImmType    : out std_logic_vector(2 downto 0);  -- 000=R,001=I,010=S,011=SB,100=U,101=UJ
-        ResultSrc  : out std_logic;                    
+        ImmType    : out std_logic_vector(2 downto 0);
+        ResultSrc  : out std_logic;
         MemWrite   : out std_logic;
         RegWrite   : out std_logic;
-        ALU_op     : out std_logic_vector(3 downto 0);    -- 0000=ADD,0001=SUB,0010=AND,0011=OR,0100=XOR,0110=SLT,0111=SLL,1000=SRL,1001=SRA,1011=SLTU
-        Halt       : out std_logic   
+        ALU_op     : out std_logic_vector(3 downto 0);
+        Halt       : out std_logic;
+        -- Load/Store control signals
+        MemRead    : out std_logic;
+        LdByte     : out std_logic;
+        LdHalf     : out std_logic;
+        LdUnsigned : out std_logic;
+        StByte     : out std_logic;
+        StHalf     : out std_logic
         );
 end ControlUnit;
 
@@ -27,12 +34,18 @@ begin
         -- defaults
         ALUSrc     <= '0';
         ALUControl <= "00";
-        ImmType    <= "000";  -- R
+        ImmType    <= "000";
         ResultSrc  <= '0';
         MemWrite   <= '0';
         RegWrite   <= '0';
-        ALU_op     <= "0000"; -- ADD
+        ALU_op     <= "0000";
         Halt       <= '0';
+        MemRead    <= '0';
+        LdByte     <= '0';
+        LdHalf     <= '0';
+        LdUnsigned <= '0';
+        StByte     <= '0';
+        StHalf     <= '0';
 
         -- I type functions
         if opcode = "0010011" then
@@ -60,7 +73,7 @@ begin
                 ALU_op     <= "1011";
             elsif funct3 = "001" then  -- slli
                 ALUControl <= "11";
-                ALU_op     <= "0111";  -- SLLI
+                ALU_op     <= "0111";
             elsif funct3 = "101" then     -- srli/srai
                 ALUControl <= "11";
                 if funct7 = "0100000" then
@@ -74,7 +87,7 @@ begin
         elsif opcode = "0110011" then
             ALUSrc     <= '0';
             RegWrite   <= '1';
-            ImmType    <= "000";          -- R
+            ImmType    <= "000";
 
             if funct3 = "000" then        -- add/sub
                 ALUControl <= "00";
@@ -101,7 +114,7 @@ begin
             elsif funct3 = "101" then     -- srl/sra
                 ALUControl <= "11";
                 if funct7 = "0100000" then
-                    ALU_op <= "0101";     -- sra
+                    ALU_op <= "1001";     -- sra
                 else
                     ALU_op <= "1000";     -- srl
                 end if;
@@ -114,9 +127,29 @@ begin
             ResultSrc  <= '1';           
             ImmType    <= "001";          
             ALUControl <= "00";
-            ALU_op     <= "0000";         
+            ALU_op     <= "0000";
+            MemRead    <= '1';
+            
+            case funct3 is
+                when "000" =>  -- LB (sign-extend)
+                    LdByte <= '1';
+                    LdUnsigned <= '0';
+                when "001" =>  -- LH (sign-extend)
+                    LdHalf <= '1';
+                    LdUnsigned <= '0';
+                when "010" =>  -- LW
+                    LdUnsigned <= '0';
+                when "100" =>  -- LBU (zero-extend)
+                    LdByte <= '1';
+                    LdUnsigned <= '1';
+                when "101" =>  -- LHU (zero-extend)
+                    LdHalf <= '1';
+                    LdUnsigned <= '1';
+                when others =>
+                    null;
+            end case;
 
-        -- sw 
+        -- sb, sh, sw 
         elsif opcode = "0100011" then
             ALUSrc     <= '1';
             MemWrite   <= '1';
@@ -124,6 +157,17 @@ begin
             ImmType    <= "010";         
             ALUControl <= "00";
             ALU_op     <= "0000";
+            
+            case funct3 is
+                when "000" =>  -- SB
+                    StByte <= '1';
+                when "001" =>  -- SH
+                    StHalf <= '1';
+                when "010" =>  -- SW
+                    null;
+                when others =>
+                    null;
+            end case;
 
         -- bew, bne, blt, bge, bltu, bgeu
         elsif opcode = "1100011" then
@@ -132,6 +176,14 @@ begin
             ImmType    <= "011";          
             ALUControl <= "00";
             ALU_op     <= "0001";         
+
+        -- lui
+        elsif opcode = "0110111" then
+            ALUSrc     <= '1';
+            RegWrite   <= '1';
+            ImmType    <= "100";         -- U-type immediate
+            ALUControl <= "00";
+            ALU_op     <= "0000";
 
         -- auipc
         elsif opcode = "0010111" then
@@ -147,7 +199,6 @@ begin
             RegWrite   <= '1';
             ImmType    <= "101";          
             ALUControl <= "00";
-           
 
         -- jalr
         elsif opcode = "1100111" then
