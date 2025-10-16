@@ -34,7 +34,7 @@ architecture structure of RISCV_Processor is
   -- Required instruction memory signals
   signal s_IMemAddr     : std_logic_vector(N-1 downto 0); -- Do not assign this signal, assign to s_NextInstAddr instead
   signal s_NextInstAddr : std_logic_vector(N-1 downto 0); -- TODO: use this signal as your intended final instruction memory address input.
-  signal s_Inst         : std_logic_vector(N-1 downto 0); -- TODO: use this signal as the instruction signal 
+  signal s_Inst         : std_logic_vector(N-1 downto 0) := (others=> '0'); -- TODO: use this signal as the instruction signal 
 
   -- Required halt signal -- for simulation
   signal s_Halt         : std_logic;  -- TODO: this signal indicates to the simulation that intended program execution has completed. (Opcode: 01 0100)
@@ -57,7 +57,7 @@ architecture structure of RISCV_Processor is
   --       requires below this comment
 
 --PC Path signals
-signal s_PC : std_logic_vector(N-1 downto 0);
+signal s_PC : std_logic_vector(N-1 downto 0) := x"00000000";
 signal s_PCPlus4 : std_logic_vector(N-1 downto 0);
 signal PCSrc : pc_src_t;
 signal s_BrTaken : std_logic := '0'; --Branch taken 0 or 1
@@ -72,8 +72,8 @@ signal s_rs2     : std_logic_vector(4 downto 0);
 signal s_rd      : std_logic_vector(4 downto 0);
 
 --Register signals
-signal s_rs1_val : std_logic_vector(N-1 downto 0);
-signal s_rs2_val : std_logic_vector(N-1 downto 0);
+signal s_rs1_val : std_logic_vector(N-1 downto 0) := (others=>'0');
+signal s_rs2_val : std_logic_vector(N-1 downto 0) := (others=>'0');
 
 --Immediate signals
 signal s_ImmKind : std_logic_vector(2 downto 0); -- 000=R...., Selects what instruction type for control unit
@@ -82,18 +82,18 @@ signal s_immB : std_logic_vector(31 downto 0) := (others => '0');
 signal s_immJ : std_logic_vector(31 downto 0) := (others => '0');
 
 --ALU signals
-signal s_ALUSrcSel : std_logic; --0: rs2, 1: immI
-signal s_ALUInB : std_logic_vector(N-1 downto 0); --second ALU input
+signal s_ALUSrcSel : std_logic := '0'; --0: rs2, 1: immI
+signal s_ALUInB : std_logic_vector(N-1 downto 0) := (others => '0'); --second ALU input
 signal s_ALURes : std_logic_vector(N-1 downto 0); --ALU Result signal
-signal s_ALUCtrl : std_logic_vector(3 downto 0);
+signal s_ALUCtrl : std_logic_vector(3 downto 0) := (others=>'0');
 signal s_ALUOvfl : std_logic;
 signal s_ALU2BitControl : std_logic_vector(1 downto 0);
-signal s_ALUShiftAmt : std_logic_vector(4 downto 0);
-signal s_ALUZero : std_logic; --Zero flag signal
+signal s_ALUShiftAmt : std_logic_vector(4 downto 0) := (others=>'0');
+signal s_ALUZero : std_logic := '0'; --Zero flag signal
 
 --Writeback signals
 signal s_WBSel : std_logic := '0';
-signal s_WBData : std_logic_vector(31 downto 0);
+signal s_WBData : std_logic_vector(31 downto 0) := (others=> '0');
 
 
 --Control unit instantiation
@@ -192,7 +192,6 @@ end component;
 
 
 
-
 begin
 
   -- TODO: This is required to be your final input to your instruction memory. This provides a feasible method to externally load the memory module which means that the synthesis tool must assume it knows nothing about the values stored in the instruction memory. If this is not included, much, if not all of the design is optimized out because the synthesis tool will believe the memory to be all zeros.
@@ -241,6 +240,7 @@ s_ALUShiftAmt <= s_rs2_val(4 downto 0) when (s_opcode = "0110011" and (s_funct3 
 
 
   PCU: PCFetch
+    generic map(G_RESET_VECTOR => to_unsigned(16#00100100#, 32))
     port map(
       i_clk=> iCLK,
       i_rst=> iRST,
@@ -335,10 +335,6 @@ MUX_WB: mux2t1_N
 -- Synthesis keep-alive and flags
 oALUOut <= s_ALURes;
 s_Ovfl  <= s_ALUOvfl;
-
--- For ADD/ADDI, DMem address/data unused
-s_DMemAddr <= (others => '0');
-s_DMemData <= (others => '0');
 
 -- Sequential PC defaults (already good)
 s_Halt    <= '0';
