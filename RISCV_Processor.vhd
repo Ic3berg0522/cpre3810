@@ -110,6 +110,10 @@ signal s_LoadedData : std_logic_vector(31 downto 0);
 signal s_RegWrLoad : std_logic;
 signal s_RegWr_Final : std_logic;
 
+--Signals for AUIPC logic
+signal s_ALUInA : std_logic_vector(31 downto 0);
+signal s_ASel   : std_logic_vector(1 downto 0); -- 00=RS1, 01=PC, 10=ZERO
+
 --Control unit instantiation
   component ControlUnit is
     port(
@@ -129,7 +133,8 @@ signal s_RegWr_Final : std_logic;
       LdHalf     : out std_logic;
       LdUnsigned : out std_logic;
       StByte     : out std_logic;
-      StHalf     : out std_logic
+      StHalf     : out std_logic;
+      ASel       : out std_logic_vector(1 downto 0)
     );
 end component;
 --N carry ripple full adder instantiation
@@ -281,9 +286,16 @@ s_ALUShiftAmt <= s_rs2_val(4 downto 0) when (s_opcode = "0110011" and (s_funct3 
                  s_Inst(24 downto 20)  when (s_opcode = "0010011" and (s_funct3 = "001" or s_funct3 = "101")) else
                  (others => '0');
 
+--AUIPC select
+with s_ASel select
+  s_ALUInA <= s_rs1_val       when "00",
+              s_PC            when "01",
+              (others => '0') when "10",
+              s_rs1_val       when others;
+
 
   PCU: PCFetch
-    generic map(G_RESET_VECTOR => x"00000000")
+    generic map(G_RESET_VECTOR => x"00400000")
     port map(
       i_clk=> iCLK,
       i_rst=> iRST,
@@ -328,7 +340,8 @@ U_IMM: imm_generator
       LdHalf     => s_LdHalf,
       LdUnsigned => s_LdUnsigned,
       StByte     => s_StByte,
-      StHalf     => s_StHalf
+      StHalf     => s_StHalf,
+      ASel       => s_ASel
     );
 --Reg file logic
 REGFILE: reg
@@ -360,8 +373,8 @@ MUX_ALU_B: mux2t1_N
 --ALU logic
 ALU0: ALUUnit
   port map(
-    A         => s_rs1_val,
-    B         => s_ALUInB,
+    A         => s_ALUInA,
+    B         => s_ALUInB, --select between rs1 and PC
     shift_amt => s_ALUShiftAmt,
     ALU_op    => s_ALUCtrl,    
     F         => s_ALURes, --ALU Result

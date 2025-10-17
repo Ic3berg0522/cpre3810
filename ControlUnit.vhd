@@ -23,7 +23,9 @@ entity ControlUnit is
         LdHalf     : out std_logic;
         LdUnsigned : out std_logic;
         StByte     : out std_logic;
-        StHalf     : out std_logic
+        StHalf     : out std_logic;
+        --Needed for AUIPC
+        ASel       : out std_logic_vector(1 downto 0)
         );
 end ControlUnit;
 
@@ -46,6 +48,7 @@ begin
         LdUnsigned <= '0';
         StByte     <= '0';
         StHalf     <= '0';
+        ASel       <= "00";
 
         -- I type functions
         if opcode = "0010011" then
@@ -192,6 +195,7 @@ begin
             ImmType    <= "100";         
             ALUControl <= "00";
             ALU_op     <= "0000";
+            ASel        <= "01";
 
         -- jal
         elsif opcode = "1101111" then
