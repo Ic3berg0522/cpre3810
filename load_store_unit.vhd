@@ -50,9 +50,8 @@ architecture structural of load_store_unit is
   signal lb_ext : std_logic_vector(31 downto 0);
   signal lh_ext : std_logic_vector(31 downto 0);
 begin
-  ------------------------------------------------------------------------------
+  
   -- address + commands
-  ------------------------------------------------------------------------------
   ofs          <= i_addr(1 downto 0);
   addr_aligned <= std_logic_vector(unsigned(i_addr) and not(to_unsigned(3, 32)));
 
@@ -60,9 +59,8 @@ begin
   o_mem_we   <= i_mem_write;
   o_mem_re   <= i_mem_read;
 
-  ------------------------------------------------------------------------------
+
   -- STORE: byte enables
-  ------------------------------------------------------------------------------
   with ofs select
     be_sb <= "0001" when "00",
              "0010" when "01",
@@ -78,12 +76,8 @@ begin
             be_sh when i_st_half = '1' else
             be_sw;
 
-  -- mute when not writing (optional)
-  o_mem_be <= be_sel when i_mem_write = '1' else "0000";
 
-  ------------------------------------------------------------------------------
-  -- STORE: data alignment (each case is exactly 32 bits)
-  ------------------------------------------------------------------------------
+
   -- SB: place low 8 bits of rs2 into addressed byte lane
   with ofs select
     w_sb <= (31 downto  8 => '0') & i_rs2_wdata(7 downto 0)                              when "00", -- bits [7:0]
@@ -105,9 +99,7 @@ begin
 
   o_mem_wdata <= w_sel;
 
-  ------------------------------------------------------------------------------
   -- LOAD: subword select and extend
-  ------------------------------------------------------------------------------
   -- select byte/half from returned 32-bit word using address offset
   with ofs select
     b_sel <= i_mem_rdata(7  downto 0)  when "00",

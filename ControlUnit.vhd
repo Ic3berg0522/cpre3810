@@ -17,7 +17,7 @@ entity ControlUnit is
         RegWrite   : out std_logic;
         ALU_op     : out std_logic_vector(3 downto 0);
         Halt       : out std_logic;
-        -- Load/Store control signals
+        --Load/Store control signals
         MemRead    : out std_logic;
         LdByte     : out std_logic;
         LdHalf     : out std_logic;
@@ -34,11 +34,11 @@ begin
         -- defaults
         ALUSrc     <= '0';
         ALUControl <= "00";
-        ImmType    <= "000";
+        ImmType    <= "000"; --Default R-type
         ResultSrc  <= '0';
         MemWrite   <= '0';
         RegWrite   <= '0';
-        ALU_op     <= "0000";
+        ALU_op     <= "0000"; --Do add by default
         Halt       <= '0';
         MemRead    <= '0';
         LdByte     <= '0';
@@ -114,7 +114,7 @@ begin
             elsif funct3 = "101" then     -- srl/sra
                 ALUControl <= "11";
                 if funct7 = "0100000" then
-                    ALU_op <= "1001";     -- sra
+                    ALU_op <= "0101";     -- sra
                 else
                     ALU_op <= "1000";     -- srl
                 end if;

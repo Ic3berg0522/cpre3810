@@ -223,12 +223,12 @@ component load_store_unit is
       i_ld_unsigned : in  std_logic;
       i_st_byte     : in  std_logic;
       i_st_half     : in  std_logic;
+      i_mem_rdata   : in  std_logic_vector(31 downto 0);
       o_mem_addr    : out std_logic_vector(31 downto 0);
       o_mem_wdata   : out std_logic_vector(31 downto 0);
       o_mem_be      : out std_logic_vector(3 downto 0);
       o_mem_re      : out std_logic;
       o_mem_we      : out std_logic;
-      i_mem_rdata   : in  std_logic_vector(31 downto 0);
       o_load_data   : out std_logic_vector(31 downto 0)
     );
   end component;
@@ -319,7 +319,7 @@ U_IMM: imm_generator
       ALUControl => open,
       ImmType    => s_ImmKind, 
       ResultSrc  => s_WBSel,
-      MemWrite   => s_DMemWr,    
+      MemWrite   => s_MemWrite,    
       RegWrite   => s_RegWr,
       ALU_op     => s_ALUCtrl,
       Halt       => s_Halt,
@@ -382,7 +382,7 @@ MUX_WB: mux2t1_N
 
 LSU: load_store_unit
   port map(
-    i_addr        => s_ALURes,           -- Address from ALU (computed address = rs1 + imm)
+    i_addr        => s_ALURes,           -- Address from ALU
     i_rs2_wdata   => s_rs2_val,          -- Data to store (rs2 value)
     i_mem_read    => s_MemRead,          -- Load enable (from opcode decode)
     i_mem_write   => s_MemWrite,         -- Store enable (from opcode decode)
@@ -400,7 +400,7 @@ LSU: load_store_unit
     o_load_data   => s_LoadedData        -- Load data for writeback
   );
 
-
+--Map RegWrData signal to writeback data signal
  s_RegWrData <= s_WBData;
 
 -- Synthesis keep-alive and flags
