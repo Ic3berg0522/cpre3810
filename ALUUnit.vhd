@@ -1,9 +1,8 @@
+
 --Michael Berg
--- Michael Berg
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use work.RISCV_types.all;
 
 entity ALUUnit is
   port (
@@ -58,11 +57,11 @@ begin
 
 
   
- -- Shift mode select (00=SLL, 01=SRL, 10=SRA 11=SRAI)
+ -- Shift mode select (00=SLL, 01=SRL, 10=SRA 10=SRAI)
   with ALU_op select
     sh_mode <= "00" when "0111",  -- SLL
                 "01" when "1000",  -- SRL
-                "11" when "1001",  -- SRAI
+                "10" when "1001",  -- SRAI
                 "10" when "0101",  -- SRA
                 "00" when others;  -- default
 
@@ -109,3 +108,4 @@ begin
                  '0'           when others;
 
 end architecture;
+
