@@ -4,6 +4,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 use work.RISCV_types.all;
+
 entity ControlUnit is
     port(
         opcode     : in  std_logic_vector(6 downto 0);
@@ -25,11 +26,19 @@ entity ControlUnit is
         StByte     : out std_logic;
         StHalf     : out std_logic;
         --Needed for AUIPC
-        ASel       : out std_logic_vector(1 downto 0)
-        );
+        ASel       : out std_logic_vector(1 downto 0);
+        --Needed for branch instructions 
+        Branch     : out std_logic;
+        PCSrc      : out std_logic_vector(1 downto 0)  -- 00=SEQ, 01=BR, 10=JAL, 11=JALR
+    );
 end ControlUnit;
 
 architecture Behavioral of ControlUnit is
+    -- PC Source encoding constants
+    constant PC_SEQ      : std_logic_vector(1 downto 0) := "00";  -- PC + 4
+    constant PC_BRANCH   : std_logic_vector(1 downto 0) := "01";  -- Branch target
+    constant PC_JAL      : std_logic_vector(1 downto 0) := "10";  -- JAL target
+    constant PC_JALR     : std_logic_vector(1 downto 0) := "11";  -- JALR target
 begin
     process(opcode, funct3, funct7)
     begin
@@ -49,12 +58,15 @@ begin
         StByte     <= '0';
         StHalf     <= '0';
         ASel       <= "00";
+        Branch     <= '0';
+        PCSrc      <= PC_SEQ;  -- Default: sequential (PC + 4)
 
         -- I type functions
         if opcode = "0010011" then
             ALUSrc     <= '1';
             RegWrite   <= '1';
-            ImmType    <= "001";          
+            ImmType    <= "001";
+            PCSrc      <= PC_SEQ;
 
             if funct3 = "000" then        -- addi
                 ALUControl <= "00";
@@ -91,6 +103,7 @@ begin
             ALUSrc     <= '0';
             RegWrite   <= '1';
             ImmType    <= "000";
+            PCSrc      <= PC_SEQ;
 
             if funct3 = "000" then        -- add/sub
                 ALUControl <= "00";
@@ -132,6 +145,7 @@ begin
             ALUControl <= "00";
             ALU_op     <= "0000";
             MemRead    <= '1';
+            PCSrc      <= PC_SEQ;
             
             case funct3 is
                 when "000" =>  -- LB (sign-extend)
@@ -160,6 +174,7 @@ begin
             ImmType    <= "010";         
             ALUControl <= "00";
             ALU_op     <= "0000";
+            PCSrc      <= PC_SEQ;
             
             case funct3 is
                 when "000" =>  -- SB
@@ -172,13 +187,17 @@ begin
                     null;
             end case;
 
-        -- bew, bne, blt, bge, bltu, bgeu
+        -- beq, bne, blt, bge, bltu, bgeu
         elsif opcode = "1100011" then
-            ALUSrc     <= '0';
-            RegWrite   <= '0';
-            ImmType    <= "011";          
-            ALUControl <= "00";
-            ALU_op     <= "0001";         
+            ALUSrc     <= '0';         -- Use rs2 (not immediate)
+            RegWrite   <= '0';         -- No register write
+            MemWrite   <= '0';         -- No memory write
+            MemRead    <= '0';         -- No memory read
+            ImmType    <= "011";       -- B-type immediate
+            ALUControl <= "00";        -- Don't care (comparator does the work)
+            ALU_op     <= "0000";      -- Don't care
+            Branch     <= '1';         -- Enable branch comparator
+            PCSrc      <= PC_BRANCH;   -- PC source is branch target
 
         -- lui
         elsif opcode = "0110111" then
@@ -187,6 +206,7 @@ begin
             ImmType    <= "100";         -- U-type immediate
             ALUControl <= "00";
             ALU_op     <= "0000";
+            PCSrc      <= PC_SEQ;
 
         -- auipc
         elsif opcode = "0010111" then
@@ -195,7 +215,8 @@ begin
             ImmType    <= "100";         
             ALUControl <= "00";
             ALU_op     <= "0000";
-            ASel        <= "01";
+            ASel       <= "01";
+            PCSrc      <= PC_SEQ;
 
         -- jal
         elsif opcode = "1101111" then
@@ -203,6 +224,7 @@ begin
             RegWrite   <= '1';
             ImmType    <= "101";          
             ALUControl <= "00";
+            PCSrc      <= PC_JAL;  -- Jump to JAL target
 
         -- jalr
         elsif opcode = "1100111" then
@@ -210,12 +232,14 @@ begin
             RegWrite   <= '1';
             ImmType    <= "001";          
             ALUControl <= "00";
+            PCSrc      <= PC_JALR;  -- Jump to JALR target
 
-        -- wfi
+        -- wfi (halt)
         elsif opcode = "1110011" then
             RegWrite   <= '0';
             ALU_op     <= "1111";
             Halt       <= '1';
+            PCSrc      <= PC_SEQ;  -- Doesn't matter (halted)
         end if;
     end process;
 end Behavioral;
