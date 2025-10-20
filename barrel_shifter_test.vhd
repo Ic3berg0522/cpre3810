@@ -15,10 +15,10 @@ end entity;
 
 architecture structural of barrel_shifter is
 
-  signal sll_result : std_logic_vector(31 downto 0);
-  signal srl_result : std_logic_vector(31 downto 0);
-  signal sra_result : std_logic_vector(31 downto 0);
-  signal sign_ext : std_logic_vector(31 downto 0);
+  signal sll_result : std_logic_vector(31 downto 0); --Holds the result of SLL 
+  signal srl_result : std_logic_vector(31 downto 0); --Holds the result of SRL
+  signal sra_result : std_logic_vector(31 downto 0); --Holds the result of SRA
+  signal sign_ext : std_logic_vector(31 downto 0);   --holds the sign extended value for SRA 
 
 begin
 
@@ -27,77 +27,77 @@ begin
 
   -- SLL: Shift left logical
   with shift_amt select
-    sll_result <= data_in                              when "00000",
-                  data_in(30 downto 0) & "0"          when "00001",
-                  data_in(29 downto 0) & "00"         when "00010",
-                  data_in(28 downto 0) & "000"        when "00011",
-                  data_in(27 downto 0) & "0000"       when "00100",
-                  data_in(26 downto 0) & "00000"      when "00101",
-                  data_in(25 downto 0) & "000000"     when "00110",
-                  data_in(24 downto 0) & "0000000"    when "00111",
-                  data_in(23 downto 0) & x"00"        when "01000",
-                  data_in(22 downto 0) & "000000000"  when "01001",
-                  data_in(21 downto 0) & "0000000000" when "01010",
-                  data_in(20 downto 0) & "00000000000" when "01011",
-                  data_in(19 downto 0) & "000000000000" when "01100",
-                  data_in(18 downto 0) & "0000000000000" when "01101",
-                  data_in(17 downto 0) & "00000000000000" when "01110",
-                  data_in(16 downto 0) & "000000000000000" when "01111",
-                  data_in(15 downto 0) & x"0000"      when "10000",
-                  data_in(14 downto 0) & "00000000000000000" when "10001",
-                  data_in(13 downto 0) & "000000000000000000" when "10010",
-                  data_in(12 downto 0) & "0000000000000000000" when "10011",
-                  data_in(11 downto 0) & "00000000000000000000" when "10100",
-                  data_in(10 downto 0) & "000000000000000000000" when "10101",
-                  data_in(9 downto 0) & "0000000000000000000000" when "10110",
-                  data_in(8 downto 0) & "00000000000000000000000" when "10111",
-                  data_in(7 downto 0) & x"000000"     when "11000",
-                  data_in(6 downto 0) & "0000000000000000000000000" when "11001",
-                  data_in(5 downto 0) & "00000000000000000000000000" when "11010",
-                  data_in(4 downto 0) & "000000000000000000000000000" when "11011",
-                  data_in(3 downto 0) & "0000000000000000000000000000" when "11100",
-                  data_in(2 downto 0) & "00000000000000000000000000000" when "11101",
+    sll_result <= data_in                                                when "00000",
+                  data_in(30 downto 0) & "0"                             when "00001",
+                  data_in(29 downto 0) & "00"                            when "00010",
+                  data_in(28 downto 0) & "000"                           when "00011",
+                  data_in(27 downto 0) & "0000"                          when "00100",
+                  data_in(26 downto 0) & "00000"                         when "00101",
+                  data_in(25 downto 0) & "000000"                        when "00110",
+                  data_in(24 downto 0) & "0000000"                       when "00111",
+                  data_in(23 downto 0) & x"00"                           when "01000",
+                  data_in(22 downto 0) & "000000000"                     when "01001",
+                  data_in(21 downto 0) & "0000000000"                    when "01010",
+                  data_in(20 downto 0) & "00000000000"                   when "01011",
+                  data_in(19 downto 0) & "000000000000"                  when "01100",
+                  data_in(18 downto 0) & "0000000000000"                 when "01101",
+                  data_in(17 downto 0) & "00000000000000"                when "01110",
+                  data_in(16 downto 0) & "000000000000000"               when "01111",
+                  data_in(15 downto 0) & x"0000"                         when "10000",
+                  data_in(14 downto 0) & "00000000000000000"             when "10001",
+                  data_in(13 downto 0) & "000000000000000000"            when "10010",
+                  data_in(12 downto 0) & "0000000000000000000"           when "10011",
+                  data_in(11 downto 0) & "00000000000000000000"          when "10100",
+                  data_in(10 downto 0) & "000000000000000000000"         when "10101",
+                  data_in(9 downto 0) & "0000000000000000000000"         when "10110",
+                  data_in(8 downto 0) & "00000000000000000000000"        when "10111",
+                  data_in(7 downto 0) & x"000000"                        when "11000",
+                  data_in(6 downto 0) & "0000000000000000000000000"      when "11001",
+                  data_in(5 downto 0) & "00000000000000000000000000"     when "11010",
+                  data_in(4 downto 0) & "000000000000000000000000000"    when "11011",
+                  data_in(3 downto 0) & "0000000000000000000000000000"   when "11100",
+                  data_in(2 downto 0) & "00000000000000000000000000000"  when "11101",
                   data_in(1 downto 0) & "000000000000000000000000000000" when "11110",
-                  data_in(0) & "0000000000000000000000000000000" when "11111",
+                  data_in(0) & "0000000000000000000000000000000"         when "11111",
                   (others => '0') when others;
 
   -- SRL: Shift right logical
   with shift_amt select
-    srl_result <= data_in                              when "00000",
-                  "0" & data_in(31 downto 1)          when "00001",
-                  "00" & data_in(31 downto 2)         when "00010",
-                  "000" & data_in(31 downto 3)        when "00011",
-                  "0000" & data_in(31 downto 4)       when "00100",
-                  "00000" & data_in(31 downto 5)      when "00101",
-                  "000000" & data_in(31 downto 6)     when "00110",
-                  "0000000" & data_in(31 downto 7)    when "00111",
-                  x"00" & data_in(31 downto 8)        when "01000",
-                  "000000000" & data_in(31 downto 9)  when "01001",
-                  "0000000000" & data_in(31 downto 10) when "01010",
-                  "00000000000" & data_in(31 downto 11) when "01011",
-                  "000000000000" & data_in(31 downto 12) when "01100",
-                  "0000000000000" & data_in(31 downto 13) when "01101",
-                  "00000000000000" & data_in(31 downto 14) when "01110",
-                  "000000000000000" & data_in(31 downto 15) when "01111",
-                  x"0000" & data_in(31 downto 16)     when "10000",
-                  "00000000000000000" & data_in(31 downto 17) when "10001",
-                  "000000000000000000" & data_in(31 downto 18) when "10010",
-                  "0000000000000000000" & data_in(31 downto 19) when "10011",
-                  "00000000000000000000" & data_in(31 downto 20) when "10100",
-                  "000000000000000000000" & data_in(31 downto 21) when "10101",
-                  "0000000000000000000000" & data_in(31 downto 22) when "10110",
-                  "00000000000000000000000" & data_in(31 downto 23) when "10111",
-                  x"000000" & data_in(31 downto 24)   when "11000",
-                  "0000000000000000000000000" & data_in(31 downto 25) when "11001",
-                  "00000000000000000000000000" & data_in(31 downto 26) when "11010",
-                  "000000000000000000000000000" & data_in(31 downto 27) when "11011",
-                  "0000000000000000000000000000" & data_in(31 downto 28) when "11100",
-                  "00000000000000000000000000000" & data_in(31 downto 29) when "11101",
+    srl_result <= data_in                                                  when "00000",
+                  "0" & data_in(31 downto 1)                               when "00001",
+                  "00" & data_in(31 downto 2)                              when "00010",
+                  "000" & data_in(31 downto 3)                             when "00011",
+                  "0000" & data_in(31 downto 4)                            when "00100",
+                  "00000" & data_in(31 downto 5)                           when "00101",
+                  "000000" & data_in(31 downto 6)                          when "00110",
+                  "0000000" & data_in(31 downto 7)                         when "00111",
+                  x"00" & data_in(31 downto 8)                             when "01000",
+                  "000000000" & data_in(31 downto 9)                       when "01001",
+                  "0000000000" & data_in(31 downto 10)                     when "01010",
+                  "00000000000" & data_in(31 downto 11)                    when "01011",
+                  "000000000000" & data_in(31 downto 12)                   when "01100",
+                  "0000000000000" & data_in(31 downto 13)                  when "01101",
+                  "00000000000000" & data_in(31 downto 14)                 when "01110",
+                  "000000000000000" & data_in(31 downto 15)                when "01111",
+                  x"0000" & data_in(31 downto 16)                          when "10000",
+                  "00000000000000000" & data_in(31 downto 17)              when "10001",
+                  "000000000000000000" & data_in(31 downto 18)             when "10010",
+                  "0000000000000000000" & data_in(31 downto 19)            when "10011",
+                  "00000000000000000000" & data_in(31 downto 20)           when "10100",
+                  "000000000000000000000" & data_in(31 downto 21)          when "10101",
+                  "0000000000000000000000" & data_in(31 downto 22)         when "10110",
+                  "00000000000000000000000" & data_in(31 downto 23)        when "10111",
+                  x"000000" & data_in(31 downto 24)                        when "11000",
+                  "0000000000000000000000000" & data_in(31 downto 25)      when "11001",
+                  "00000000000000000000000000" & data_in(31 downto 26)     when "11010",
+                  "000000000000000000000000000" & data_in(31 downto 27)    when "11011",
+                  "0000000000000000000000000000" & data_in(31 downto 28)   when "11100",
+                  "00000000000000000000000000000" & data_in(31 downto 29)  when "11101",
                   "000000000000000000000000000000" & data_in(31 downto 30) when "11110",
-                  "0000000000000000000000000000000" & data_in(31) when "11111",
+                  "0000000000000000000000000000000" & data_in(31)          when "11111",
                   (others => '0') when others;
 
-  -- SRA: Shift right arithmetic
+  -- SRA: Shift right arithmetic 
   with shift_amt select
     sra_result <= data_in                                        when "00000",
                   data_in(31) & data_in(31 downto 1)            when "00001",
@@ -133,7 +133,7 @@ begin
                   sign_ext(31 downto 1) & data_in(31)            when "11111",
                   (others => data_in(31)) when others;
 
-  -- Select output based on mode
+  -- Select output based on input mode given by the ALU 
   with mode select
     data_out <= sll_result when "00",
                 srl_result when "01",
