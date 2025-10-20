@@ -60,7 +60,6 @@ architecture structure of RISCV_Processor is
 signal s_PC : std_logic_vector(N-1 downto 0) := x"00000000";
 signal s_PCPlus4 : std_logic_vector(N-1 downto 0);
 signal PCSrc : pc_src_t;
-signal s_BrTaken : std_logic := '0'; --Branch taken 0 or 1
 
 
 --Decode fields
@@ -114,6 +113,10 @@ signal s_RegWr_Final : std_logic;
 signal s_ALUInA : std_logic_vector(31 downto 0);
 signal s_ASel   : std_logic_vector(1 downto 0); -- 00=RS1, 01=PC, 10=ZERO
 
+--Signals for branch logic
+signal s_Branch : std_logic; --From control unit
+signal s_BranchTaken : std_logic; --From branch logic 
+
 --Control unit instantiation
   component ControlUnit is
     port(
@@ -134,7 +137,9 @@ signal s_ASel   : std_logic_vector(1 downto 0); -- 00=RS1, 01=PC, 10=ZERO
       LdUnsigned : out std_logic;
       StByte     : out std_logic;
       StHalf     : out std_logic;
-      ASel       : out std_logic_vector(1 downto 0)
+      ASel       : out std_logic_vector(1 downto 0);
+      Branch        : out std_logic;
+      PCSrc         : out pc_src_t
     );
 end component;
 --N carry ripple full adder instantiation
@@ -238,7 +243,16 @@ component load_store_unit is
     );
   end component;
 
-
+  --Branch logic unit
+  component branch_logic is 
+    port(
+    i_rs1     : in  std_logic_vector(31 downto 0);
+    i_rs2     : in  std_logic_vector(31 downto 0);
+    i_funct3  : in  std_logic_vector(2 downto 0);
+    i_branch  : in  std_logic;  -- from control unit (1 for branch instructions)
+    o_br_taken: out std_logic
+    );
+  end component;
 
 begin
 
@@ -294,33 +308,51 @@ with s_ASel select
               s_rs1_val       when others;
 
 
+
+
+--Immediate generator I-type
+IMM_I: imm_generator
+   port map(
+	i_instr => s_Inst,
+	i_kind => s_ImmKind,
+	o_imm => s_immI
+	);
+
+--Immediate generator B-type
+IMM_B: imm_generator
+   port map(
+	i_instr => s_Inst,
+	i_kind => s_ImmKind,
+	o_imm => s_immB
+	);
+
+--Immediate generator J-Type
+IMM_J: imm_generator
+   port map(
+	i_instr => s_Inst,
+	i_kind => s_ImmKind,
+	o_imm => s_immJ
+	);
+
   PCU: PCFetch
-    generic map(G_RESET_VECTOR => x"00400000")
+    generic map(G_RESET_VECTOR => x"00400000") --Reset vector 00400000 so PC carries full address; needed for AUIPC to work
     port map(
       i_clk=> iCLK,
       i_rst=> iRST,
       i_halt=> s_Halt,
       i_pc_src => PCSrc,
-      i_br_taken => s_BrTaken, --NEEDS TO BE IMPLEMENTED
+      i_br_taken => s_BranchTaken, 
       -- targets (only immI matters for JALR later; tie B/J to zero for now)
       i_rs1_val   => s_rs1_val,
       i_immI      => s_immI,
-      i_immB      => (others => '0'), --WILL BE CHANGED WHEN FURTHER IMPLEMENTING
-      i_immJ      => (others => '0'), --WILL BE CHANGED WHEN FURTHER IMPLEMENTING
+      i_immB      => s_immB, 
+      i_immJ      => s_immJ,
       o_pc        => s_PC, --Current PC
       o_pc_plus4  => s_PCPlus4, --PC + 4
-      o_imem_addr => s_NextInstAddr    -- Feeds IMEM the addr
+      o_imem_addr => s_NextInstAddr -- Feeds IMEM the addr
     );
 
 
-
---Immediate generator
-U_IMM: imm_generator
-   port map(
-	i_instr => s_Inst,
-	i_kind => s_ImmKind,
-	o_imm => s_ImmI
-	);
 --Control unit
   U_CTRL: ControlUnit
     port map(
@@ -341,8 +373,20 @@ U_IMM: imm_generator
       LdUnsigned => s_LdUnsigned,
       StByte     => s_StByte,
       StHalf     => s_StHalf,
-      ASel       => s_ASel
+      ASel       => s_ASel,
+      Branch     => s_Branch,
+      PCSrc      => PCSrc
     );
+--Branch logic
+BRANCH_UNIT: branch_logic
+  port map(
+    i_rs1 => s_rs1_val,
+    i_rs2 => s_rs2_val,
+    i_funct3 => s_funct3,
+    i_branch => s_Branch,
+    o_br_taken => s_BranchTaken
+  );
+
 --Reg file logic
 REGFILE: reg
    generic map(N => 32)
