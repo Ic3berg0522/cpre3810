@@ -114,8 +114,8 @@ signal s_ALUInA : std_logic_vector(31 downto 0);
 signal s_ASel   : std_logic_vector(1 downto 0); -- 00=RS1, 01=PC, 10=ZERO
 
 --Signals for branch logic
-signal s_Branch : std_logic; --From control unit
-signal s_BranchTaken : std_logic; --From branch logic 
+signal s_Branch : std_logic := (others => 0); --From control unit
+signal s_BranchTaken : std_logic := (others => 0); --From branch logic 
 
 --Control unit instantiation
   component ControlUnit is

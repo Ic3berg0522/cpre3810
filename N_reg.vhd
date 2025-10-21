@@ -20,17 +20,22 @@ end N_reg;
 
 architecture structural of N_reg is
 
-component dffg port(i_CLK        : in std_logic;     -- Clock input
+component dffg 
+       port(
+       i_CLK        : in std_logic;     -- Clock input
        i_RST        : in std_logic;     -- Reset input
        i_WE         : in std_logic;     -- Write enable input
        i_D          : in std_logic;     -- Data value input
-       o_Q          : out std_logic);   -- Data value output
+       o_Q          : out std_logic
+       ); 
 end component;
 
 signal reg : std_logic_vector(N-1 downto 0) := (others => '0');
 begin
 
-G_DFFG: for i in 0 to 31 generate
+       
+
+G_DFFG: for i in 0 to N-1 generate
     DFFGI : dffg port map(
        i_CLK => CLK,  
        i_RST => RST,

@@ -50,7 +50,6 @@ begin
   raw_uj <= i_instr(31) & i_instr(19 downto 12) & i_instr(20) & i_instr(30 downto 21) & '0';
   imm_uj <= std_logic_vector(resize(signed(raw_uj), 32));
 
-  -- select
   with i_kind select
     o_imm <= imm_r   when "000",
              imm_i   when "001",
@@ -59,4 +58,5 @@ begin
              imm_u   when "100",
              imm_uj  when "101",
              (others => '0') when others;
+
 end architecture;
